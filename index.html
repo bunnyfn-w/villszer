@@ -194,11 +194,11 @@ tr:hover td{background:rgba(255,255,255,0.015);}
   <!-- GitHub szinkron sav -->
   <div class="ghb">
     <span class="ghl">&#128025; GitHub szinkron:</span>
-    <input type="text" id="ghu" placeholder="github-username" title="GitHub felhasznalonev">
-    <input type="text" id="ghr" placeholder="repo neve" title="Repository neve">
-    <input type="text" id="ghf" value="villa_adatok.json" title="Fajl neve a repoban (pl. villa_adatok.json)">
-    <input type="password" id="ght" placeholder="ghp_xxxx  (Personal Access Token)" title="GitHub PAT - repo scope" style="max-width:240px;">
-    <button class="bgh" onclick="ghLoad()">&#128260; Betoltes</button>
+    <input type="text" id="ghu" value="bunnyfn-w" placeholder="github-username" title="GitHub felhasznalonev">
+    <input type="text" id="ghr" value="villszer" placeholder="repo neve" title="Repository neve">
+    <input type="text" id="ghf" value="villa_adatok.json" title="Fajl neve a repoban">
+    <input type="password" id="ght" placeholder="ghp_xxxx (PAT token mentéshez)" title="GitHub Personal Access Token" style="max-width:240px;">
+    <button class="bgh" onclick="ghLoad()">&#128260; Betoltes GitHubrol</button>
     <button class="bgh gs" onclick="ghSave()">&#128190; Mentes GitHubra</button>
     <span id="ghst" class="ghst"></span>
     <button class="bgh" onclick="saveGHS()" style="margin-left:auto;">&#128204; Beall. mentese</button>
@@ -332,7 +332,7 @@ const PASS='villa2024', SK='villa_s', DK='villa_j', PK='villa_p', GHK='villa_gh'
 // ===== UTILS =====
 function g(id){return document.getElementById(id);}
 function fmt(n){return Math.round(n||0).toLocaleString('hu-HU')+' Ft';}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toast(msg,col){
   const el=g('toast');el.textContent=msg;el.style.color=col||'var(--tx)';
   el.classList.add('show');clearTimeout(el._t);
@@ -345,7 +345,14 @@ function doLogin(){
   else{g('lerr').style.display='block';g('pw').value='';g('pw').focus();}
 }
 function doLogout(){localStorage.removeItem(SK);g('app').style.display='none';g('ls').style.display='flex';g('pw').value='';g('lerr').style.display='none';}
-function showApp(){g('ls').style.display='none';g('app').style.display='block';setToday();loadGHS();rAll();}
+function showApp(){
+  g('ls').style.display='none';
+  g('app').style.display='block';
+  setToday();
+  loadGHS();
+  // Automatikus betöltés indításkor GitHubról!
+  autoLoadFromGitHub();
+}
 g('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 if(localStorage.getItem(SK))showApp();
 
@@ -357,11 +364,11 @@ function svP(d){localStorage.setItem(PK,JSON.stringify(d));}
 function tot(j){return((parseFloat(j.hours)||0)*(parseFloat(j.rate)||0))+(parseFloat(j.material)||0);}
 function st(j){const t=tot(j),p=parseFloat(j.paid)||0;if(p<=0)return'unpaid';if(p>=t)return'paid';return'partial';}
 
-// ===== GITHUB =====
+// ===== GITHUB SYNC =====
 function saveGHS(){
   const s={u:g('ghu').value.trim(),r:g('ghr').value.trim(),f:g('ghf').value.trim()||'villa_adatok.json',t:g('ght').value.trim()};
   localStorage.setItem(GHK,JSON.stringify(s));
-  toast('Beallitas elmentve!','#a78bfa');
+  toast('Beállítások elmentve!','#a78bfa');
 }
 function loadGHS(){
   try{
@@ -372,20 +379,46 @@ function loadGHS(){
     if(s.t)g('ght').value=s.t;
   }catch(e){}
 }
-function ghs(){return{u:g('ghu').value.trim(),r:g('ghr').value.trim(),f:g('ghf').value.trim()||'villa_adatok.json',t:g('ght').value.trim()};}
+function ghs(){return{u:g('ghu').value.trim()||'bunnyfn-w',r:g('ghr').value.trim()||'villszer',f:g('ghf').value.trim()||'villa_adatok.json',t:g('ght').value.trim()};}
 function ghSt(msg,cls){
   const el=g('ghst');el.textContent=msg;el.className='ghst '+cls;
   if(cls==='ok'||cls==='err')setTimeout(()=>el.className='ghst',5000);
 }
 function ghUrl(u,r,f){return 'https://api.github.com/repos/'+u+'/'+r+'/contents/'+f;}
 
+// AUTOMATIKUS BETÖLTÉS az indításkor (Public Raw URL-ről)
+async function autoLoadFromGitHub(){
+  const {u,r,f}=ghs();
+  ghSt('Adatok betöltése...','ld');
+  try{
+    // Publikus Raw URL az azonnali lekéréshez
+    const rawUrl = `https://raw.githubusercontent.com/${u}/${r}/main/${f}?_t=${Date.now()}`;
+    const res = await fetch(rawUrl);
+    if(res.ok){
+      const data = await res.json();
+      if(data.jobs) svJ(data.jobs);
+      if(data.people) svP(data.people);
+      rAll();
+      ghSt('Adatok automatikusan betöltve!','ok');
+    } else {
+      // Ha még nincs a fõágon raw fájl, használja a helyi adatokat
+      rAll();
+      ghSt('Kész (Helyi adatok)','ok');
+    }
+  }catch(e){
+    rAll();
+    ghSt('Helyi adatok betöltve','ok');
+  }
+}
+
+// Manuális frissítés GitHub API-val
 async function ghLoad(){
   const {u,r,f,t}=ghs();
-  if(!u||!r||!t){toast('Toltsd ki a GitHub mezokat!','var(--rd)');return;}
-  ghSt('Betoltes...','ld');
+  ghSt('Betöltés...','ld');
   try{
-    const res=await fetch(ghUrl(u,r,f),{headers:{Authorization:'token '+t,Accept:'application/vnd.github.v3+json'}});
-    if(res.status===404){ghSt('Fajl nem letezik - ments el eloszor','ok');return;}
+    const headers = t ? {Authorization:'token '+t, Accept:'application/vnd.github.v3+json'} : {Accept:'application/vnd.github.v3+json'};
+    const res=await fetch(ghUrl(u,r,f),{headers});
+    if(res.status===404){ghSt('Fájl nem létezik a GitHubon','err');return;}
     if(!res.ok)throw new Error('HTTP '+res.status);
     const json=await res.json();
     const raw=atob(json.content.replace(/\n/g,''));
@@ -393,28 +426,29 @@ async function ghLoad(){
     if(data.jobs)svJ(data.jobs);
     if(data.people)svP(data.people);
     rAll();
-    ghSt(data.jobs.length+' munka, '+data.people.length+' dolgozo betoltve','ok');
-    toast('GitHub adatok betoltve!','var(--gr)');
+    ghSt((data.jobs?data.jobs.length:0)+' munka betöltve','ok');
+    toast('GitHub adatok betöltve!','var(--gr)');
   }catch(e){ghSt('Hiba: '+e.message,'err');toast('GitHub hiba: '+e.message,'var(--rd)');}
 }
 
+// MENTÉS GITHUB-RA (PAT Token szükséges a módosításhoz)
 async function ghSave(){
   const {u,r,f,t}=ghs();
-  if(!u||!r||!t){toast('Toltsd ki a GitHub mezokat!','var(--rd)');return;}
-  ghSt('Mentes...','ld');
+  if(!t){toast('A mentéshez add meg a GitHub PAT Tokent!','var(--rd)');return;}
+  ghSt('Mentés...','ld');
   try{
     const data={jobs:getJ(),people:getP(),savedAt:new Date().toISOString()};
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     let sha=undefined;
     const chk=await fetch(ghUrl(u,r,f),{headers:{Authorization:'token '+t,Accept:'application/vnd.github.v3+json'}});
     if(chk.ok){const cj=await chk.json();sha=cj.sha;}
-    const body={message:'Villa naplo frissites - '+new Date().toLocaleString('hu-HU'),content};
+    const body={message:'Villa napló adatok frissítése - '+new Date().toLocaleString('hu-HU'),content};
     if(sha)body.sha=sha;
     const res=await fetch(ghUrl(u,r,f),{method:'PUT',headers:{Authorization:'token '+t,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
     if(!res.ok){const ej=await res.json();throw new Error(ej.message||'HTTP '+res.status);}
-    ghSt('Elmentve GitHub-ra! ('+data.jobs.length+' munka)','ok');
-    toast('Adatok elmentve a GitHub repoba!','var(--gr)');
-  }catch(e){ghSt('Hiba: '+e.message,'err');toast('Mentesi hiba: '+e.message,'var(--rd)');}
+    ghSt('Elmentve GitHubra!','ok');
+    toast('Adatok sikeresen elmentve a GitHub repóba!','var(--gr)');
+  }catch(e){ghSt('Hiba: '+e.message,'err');toast('Mentési hiba: '+e.message,'var(--rd)');}
 }
 
 // ===== TABS =====
@@ -484,6 +518,24 @@ function delP(id){
 function showPM(type,text){
   const el=g('pm');el.textContent=text;el.style.color=type==='error'?'var(--rd)':'var(--gr)';el.style.display='block';
   clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2800);
+}
+
+function rP(){
+  const ppl=getP();
+  const pg=g('pg');
+  if(!ppl.length){pg.innerHTML='<div style="color:var(--tx2)">Még nincs rögzített dolgozó.</div>';return;}
+  pg.innerHTML=ppl.map(p=>`
+    <div class="pc">
+      <div>
+        <div class="pn">${esc(p.name)}</div>
+        <div class="pr">${fmt(p.rate)} / óra</div>
+      </div>
+      <div class="pa">
+        <button class="bis" onclick="editP(${p.id})" title="Szerkesztés">&#9998;</button>
+        <button class="bis dl" onclick="delP(${p.id})" title="Törlés">&#128465;</button>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ===== SAVE JOB =====
@@ -571,41 +623,61 @@ function rDash(){
   }).join('');
 }
 
-// MONTH FILTER
+// MONTH FILTER & RENDER JOBS
 function popMF(){
   const jobs=getJ(),months=[...new Set(jobs.map(j=>j.date.slice(0,7)))].sort().reverse();
   const sel=g('flm');if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML='<option value="">Minden honap</option>'+months.map(m=>'<option value="'+m+'"'+(cur===m?' selected':'')+'>'+m+'</option>').join('');
+  const cv=sel.value;
+  sel.innerHTML='<option value="">Minden honap</option>'+months.map(m=>'<option value="'+m+'"'+(cv===m?' selected':'')+'>'+m+'</option>').join('');
 }
 
-// RENDER JOBS
 function rJ(){
-  const jobs=getJ();
-  const s=(g('fls')?.value||'').toLowerCase(),st2=g('flt')?.value||'',mo=g('flm')?.value||'',wk=g('flw')?.value||'';
-  const f=jobs.filter(j=>{
-    if(st2&&st(j)!==st2)return false;
-    if(mo&&!j.date.startsWith(mo))return false;
-    if(wk&&(j.worker||'')!==wk)return false;
-    if(s&&!j.client.toLowerCase().includes(s)&&!j.location.toLowerCase().includes(s)&&!(j.worker||'').toLowerCase().includes(s))return false;
-    return true;
-  }).sort((a,b)=>b.date.localeCompare(a.date));
-  const tbody=g('jtb'),em=g('jem'),cnt=g('jcnt');
-  if(!f.length){tbody.innerHTML='';em.style.display='block';cnt.textContent='';return;}
-  em.style.display='none';cnt.textContent=f.length+' munka megjelenitve';
-  tbody.innerHTML=f.map(j=>{
-    const t=tot(j),lab=(j.hours||0)*(j.rate||0),pd=parseFloat(j.paid)||0,s2=st(j);
-    const badge=s2==='paid'?'<span class="badge bp2">&#9989; Fizetve</span>':s2==='partial'?'<span class="badge bpa">&#9889; Reszben</span>':'<span class="badge bu">&#10060; Fizetetlen</span>';
-    const note=j.note?'<br><span style="color:var(--tx2);font-size:0.75rem">'+esc(j.note.slice(0,55))+(j.note.length>55?'...':'')+'</span>':'';
-    return '<tr><td>'+esc(j.date)+'</td><td>'+esc(j.client)+note+'</td><td>'+esc(j.location)+'</td><td>'+(j.worker?'<span style="color:var(--ac);font-weight:600">'+esc(j.worker)+'</span>':'-')+'</td><td><strong>'+j.hours+'o</strong></td><td>'+(j.rate?fmt(j.rate):'-')+'</td><td>'+fmt(lab)+'</td><td>'+(j.material?fmt(j.material):'-')+'</td><td><strong>'+fmt(t)+'</strong></td><td>'+(pd>0?fmt(pd):'-')+(j.paytype?'<br><span style="font-size:0.73rem;color:var(--tx2)">'+esc(j.paytype)+'</span>':'')+'</td><td>'+badge+'</td><td><div class="ac2"><button class="bsm" onclick="openM('+j.id+')">&#9998;</button>'+(s2!=='paid'?'<button class="bsm sc2" onclick="markPaid('+j.id+')">&#128176; Fizetve</button>':'')+'<button class="bsm dg" onclick="delJ('+j.id+')">&#128465;</button></div></td></tr>';
-  }).join('');
-}
+  let jobs=getJ();
+  const q=g('fls').value.toLowerCase().trim();
+  const w=g('flw').value;
+  const t=g('flt').value;
+  const m=g('flm').value;
 
-// RENDER PEOPLE
-function rP(){
-  const ppl=getP(),grid=g('pg');
-  if(!ppl.length){grid.innerHTML='<div class="emp"><div class="ei">&#128101;</div>Meg nincs dolgozo felvive.</div>';return;}
-  grid.innerHTML=ppl.map(p=>'<div class="pc"><div><div class="pn">&#128119; '+esc(p.name)+'</div><div class="pr">&#9889; '+fmt(p.rate)+' / ora</div></div><div class="pa"><button class="bis" onclick="editP('+p.id+')">&#9998;</button><button class="bis dl" onclick="delP('+p.id+')">&#128465;</button></div></div>').join('');
+  if(q) jobs=jobs.filter(j=>j.client.toLowerCase().includes(q)||j.location.toLowerCase().includes(q));
+  if(w) jobs=jobs.filter(j=>j.worker===w);
+  if(t) jobs=jobs.filter(j=>st(j)===t);
+  if(m) jobs=jobs.filter(j=>j.date.startsWith(m));
+
+  jobs.sort((a,b)=>b.date.localeCompare(a.date));
+
+  const jtb=g('jtb'),jem=g('jem'),jcnt=g('jcnt');
+  if(!jobs.length){jtb.innerHTML='';jem.style.display='block';if(jcnt)jcnt.textContent='';return;}
+  jem.style.display='none';
+
+  jtb.innerHTML=jobs.map(j=>{
+    const lab=(j.hours||0)*(j.rate||0), total=tot(j), p=j.paid||0;
+    let badge='<span class="badge bu">&#10060; Fizetetlen</span>';
+    if(st(j)==='paid') badge='<span class="badge bp2">&#9989; Fizetve</span>';
+    else if(st(j)==='partial') badge='<span class="badge bpa">&#9889; Reszben</span>';
+
+    return `<tr>
+      <td>${esc(j.date)}</td>
+      <td><strong>${esc(j.client)}</strong></td>
+      <td>${esc(j.location)}</td>
+      <td>${esc(j.worker||'-')}</td>
+      <td>${j.hours||0} óra</td>
+      <td>${fmt(j.rate)}</td>
+      <td>${fmt(lab)}</td>
+      <td>${fmt(j.material)}</td>
+      <td><strong>${fmt(total)}</strong></td>
+      <td>${fmt(p)}</td>
+      <td>${badge}</td>
+      <td>
+        <div class="ac2">
+          ${st(j)!=='paid'?`<button class="bsm sc2" onclick="markPaid(${j.id})">&#9989; Rendezve</button>`:''}
+          <button class="bsm" onclick="openM(${j.id})">&#9998;</button>
+          <button class="bsm dg" onclick="delJ(${j.id})">&#128465;</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  if(jcnt) jcnt.textContent='Találatok száma: '+jobs.length;
 }
 </script>
 </body>
