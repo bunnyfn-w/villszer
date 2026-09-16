@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Villanyszerelo Naplo</title>
+<style>
+:root{
+  --bg:#0d1117;--sf:#161b25;--sf2:#1e2535;--sf3:#252d3e;
+  --bd:rgba(255,255,255,0.07);--ac:#f59e0b;--ac2:#3b82f6;
+  --gr:#22c55e;--gr2:rgba(34,197,94,0.12);
+  --rd:#ef4444;--rd2:rgba(239,68,68,0.12);
+  --yw:#f59e0b;--yw2:rgba(245,158,11,0.13);
+  --tx:#f1f5f9;--tx2:rgba(241,245,249,0.5);
+  --r:10px;--fn:'Segoe UI',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh;font-size:15px;}
+
+/* LOGIN */
+#ls{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 50% 25%,rgba(245,158,11,0.09) 0%,transparent 65%),var(--bg);}
+.lc{background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:48px 40px 40px;width:100%;max-width:380px;box-shadow:0 12px 56px rgba(0,0,0,0.6);text-align:center;}
+.ll{font-size:2.8rem;margin-bottom:8px;}
+.lt{font-size:1.45rem;font-weight:800;color:var(--ac);margin-bottom:4px;}
+.ls2{color:var(--tx2);font-size:0.84rem;margin-bottom:30px;}
+.fl{display:block;text-align:left;font-size:0.75rem;font-weight:700;color:var(--tx2);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:7px;}
+input,select,textarea{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);padding:11px 14px;font-size:0.92rem;outline:none;transition:border-color 0.18s;font-family:var(--fn);}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);}
+textarea{resize:vertical;min-height:68px;}
+select option{background:var(--sf2);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border:none;border-radius:var(--r);font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.18s;font-family:var(--fn);white-space:nowrap;}
+.bp{background:linear-gradient(135deg,var(--ac),#d97706);color:#0d1117;width:100%;margin-top:18px;font-size:1rem;padding:13px;}
+.bp:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.lerr{color:var(--rd);font-size:0.82rem;margin-top:10px;display:none;}
+
+/* GITHUB BAR */
+.ghb{background:#0a0e15;border-bottom:1px solid var(--bd);padding:8px 22px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.79rem;}
+.ghb input{height:32px;font-size:0.79rem;padding:0 10px;flex:1;min-width:110px;max-width:195px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);outline:none;font-family:var(--fn);}
+.ghb input:focus{border-color:#a78bfa;}
+.ghl{color:#a78bfa;white-space:nowrap;font-weight:700;}
+.ghst{font-size:0.76rem;padding:3px 10px;border-radius:20px;font-weight:700;white-space:nowrap;display:none;}
+.ghst.ok{background:var(--gr2);color:var(--gr);display:inline-flex;}
+.ghst.err{background:var(--rd2);color:var(--rd);display:inline-flex;}
+.ghst.ld{background:var(--yw2);color:var(--yw);display:inline-flex;}
+.bgh{background:rgba(139,92,246,0.14);color:#a78bfa;border:1px solid rgba(139,92,246,0.28);padding:5px 13px;font-size:0.79rem;border-radius:8px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:var(--fn);white-space:nowrap;}
+.bgh:hover{background:rgba(139,92,246,0.28);}
+.bgh.gs{background:var(--gr2);color:var(--gr);border-color:rgba(34,197,94,0.28);}
+.bgh.gs:hover{background:rgba(34,197,94,0.22);}
+
+/* TOPBAR */
+#app{display:none;}
+.tb{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.tbb{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;color:var(--ac);}
+.tbb span{font-size:1.5rem;}
+.tbr{display:flex;align-items:center;gap:10px;}
+.spill{background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:5px 14px;font-size:0.78rem;display:flex;align-items:center;gap:6px;}
+.spill .v{font-weight:700;color:var(--ac);}
+.blo{background:rgba(239,68,68,0.1);color:var(--rd);border:1px solid rgba(239,68,68,0.22);padding:7px 14px;font-size:0.8rem;}
+.blo:hover{background:rgba(239,68,68,0.2);}
+
+.main{max-width:1200px;margin:0 auto;padding:28px 20px 72px;}
+.tabs{display:flex;gap:3px;margin-bottom:26px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:5px;width:fit-content;}
+.tab{padding:8px 18px;border-radius:7px;border:none;background:transparent;color:var(--tx2);font-weight:700;font-size:0.84rem;cursor:pointer;transition:all 0.15s;font-family:var(--fn);}
+.tab.active{background:rgba(245,158,11,0.15);color:var(--ac);}
+.tab:hover:not(.active){color:var(--tx);}
+.tc{display:none;}
+.tc.active{display:block;}
+
+.st{font-size:1rem;font-weight:800;color:var(--tx);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.st::before{content:'';display:block;width:4px;height:18px;background:var(--ac);border-radius:2px;}
+
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:24px;margin-bottom:22px;}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:14px;}
+.fg .g{display:flex;flex-direction:column;gap:7px;}
+.fg .g label{font-size:0.75rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:0.7px;}
+.fg .g.full{grid-column:1/-1;}
+.fa{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;align-items:center;}
+.bsv{background:linear-gradient(135deg,var(--ac),#d97706);color:#0d1117;padding:10px 24px;}
+.bsv:hover{filter:brightness(1.1);}
+.bcn{background:var(--sf2);color:var(--tx2);border:1px solid var(--bd);}
+.bcn:hover{color:var(--tx);}
+
+/* CALC BOX */
+.cb{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:16px 20px;margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;}
+.ci .cl{font-size:0.72rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;}
+.ci .cv{font-size:1.15rem;font-weight:800;}
+.ci .cv.hi{color:var(--ac);font-size:1.35rem;}
+
+/* PEOPLE */
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:22px;}
+.pc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;transition:border-color 0.18s;}
+.pc:hover{border-color:rgba(245,158,11,0.3);}
+.pn{font-weight:700;font-size:0.95rem;margin-bottom:4px;}
+.pr{font-size:0.82rem;color:var(--ac);}
+.pa{display:flex;gap:6px;}
+.bis{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--tx2);width:30px;height:30px;font-size:0.82rem;padding:0;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;justify-content:center;font-family:var(--fn);}
+.bis:hover{color:var(--ac);border-color:var(--ac);}
+.bis.dl:hover{color:var(--rd);border-color:var(--rd);background:var(--rd2);}
+.apr{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.apr .g{flex:1;min-width:160px;}
+.bad{background:linear-gradient(135deg,var(--ac2),#1d4ed8);color:#fff;padding:10px 18px;flex-shrink:0;align-self:flex-end;height:44px;}
+.bad:hover{filter:brightness(1.1);}
+
+/* SUMMARY */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:28px;}
+.sc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:20px;}
+.scl{font-size:0.73rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:8px;}
+.scv{font-size:1.9rem;font-weight:800;line-height:1;}
+.scv.ye{color:var(--yw);}
+.scv.gn{color:var(--gr);}
+.scv.bl{color:var(--ac2);}
+.scv.re{color:var(--rd);}
+.scs{font-size:0.76rem;color:var(--tx2);margin-top:5px;}
+
+/* TABLE */
+.tw{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:700px;}
+thead{background:var(--sf2);}
+th{text-align:left;padding:12px 14px;font-size:0.71rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--tx2);white-space:nowrap;}
+td{padding:11px 14px;border-top:1px solid var(--bd);vertical-align:middle;font-size:0.86rem;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;white-space:nowrap;}
+.bp2{background:var(--gr2);color:var(--gr);}
+.bu{background:var(--rd2);color:var(--rd);}
+.bpa{background:var(--yw2);color:var(--yw);}
+.ac2{display:flex;gap:6px;align-items:center;}
+.bsm{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--tx2);padding:5px 10px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:var(--fn);white-space:nowrap;}
+.bsm:hover{color:var(--ac);border-color:var(--ac);}
+.bsm.dg:hover{color:var(--rd);border-color:var(--rd);background:var(--rd2);}
+.bsm.sc2:hover{color:var(--gr);border-color:var(--gr);background:var(--gr2);}
+
+/* FILTERS */
+.fr{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.sw{position:relative;flex:1;min-width:160px;}
+.sw input{padding-left:34px;height:38px;font-size:0.85rem;}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tx2);pointer-events:none;}
+.fs{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);padding:0 12px;height:38px;font-size:0.85rem;outline:none;cursor:pointer;font-family:var(--fn);}
+.fs:focus{border-color:var(--ac);}
+.bn{background:linear-gradient(135deg,var(--ac),#d97706);color:#0d1117;padding:8px 18px;font-size:0.85rem;}
+.bn:hover{filter:brightness(1.1);}
+.emp{text-align:center;padding:52px 20px;color:var(--tx2);font-size:0.9rem;}
+.emp .ei{font-size:2.2rem;margin-bottom:10px;}
+.tc2{font-size:0.78rem;color:var(--tx2);margin-top:8px;}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.mo.open{display:flex;}
+.md{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:28px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.7);}
+.mt2{font-size:1.05rem;font-weight:800;margin-bottom:20px;color:var(--ac);}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:13px 20px;font-size:0.88rem;font-weight:600;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateY(16px);opacity:0;transition:all 0.28s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@keyframes flash{0%,100%{border-color:var(--bd);}50%{border-color:var(--ac);}}
+.flash{animation:flash 0.4s ease;}
+
+::-webkit-scrollbar{width:7px;height:7px;}
+::-webkit-scrollbar-track{background:var(--sf);}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.18);}
+
+@media(max-width:680px){
+  .tb{padding:0 14px;}
+  .spill{display:none;}
+  .main{padding:16px 10px 56px;}
+  .sg{grid-template-columns:1fr 1fr;}
+  .fg{grid-template-columns:1fr;}
+  .tabs{width:100%;overflow-x:auto;}
+  .cb{grid-template-columns:1fr 1fr;}
+  .ghb{padding:8px 12px;}
+  .ghb input{max-width:100%;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls">
+  <div class="lc">
+    <div class="ll">&#9889;</div>
+    <div class="lt">Villanyszerelo Naplo</div>
+    <div class="ls2">Munkanyilvantarto &amp; Elszamolas</div>
+    <label class="fl">Jelszo</label>
+    <input type="password" id="pw" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+    <div class="lerr" id="lerr">&#10060; Helytelen jelszo!</div>
+    <button class="btn bp" onclick="doLogin()">&#9889; Belepés</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- GitHub szinkron sav -->
+  <div class="ghb">
+    <span class="ghl">&#128025; GitHub szinkron:</span>
+    <input type="text" id="ghu" placeholder="github-username" title="GitHub felhasznalonev">
+    <input type="text" id="ghr" placeholder="repo neve" title="Repository neve">
+    <input type="text" id="ghf" value="villa_adatok.json" title="Fajl neve a repoban (pl. villa_adatok.json)">
+    <input type="password" id="ght" placeholder="ghp_xxxx  (Personal Access Token)" title="GitHub PAT - repo scope" style="max-width:240px;">
+    <button class="bgh" onclick="ghLoad()">&#128260; Betoltes</button>
+    <button class="bgh gs" onclick="ghSave()">&#128190; Mentes GitHubra</button>
+    <span id="ghst" class="ghst"></span>
+    <button class="bgh" onclick="saveGHS()" style="margin-left:auto;">&#128204; Beall. mentese</button>
+  </div>
+
+  <div class="tb">
+    <div class="tbb"><span>&#9889;</span> Villanyszerelo Naplo</div>
+    <div class="tbr">
+      <div class="spill">&#128336; <span class="v" id="tvh">0</span> ora</div>
+      <div class="spill">&#128176; <span class="v" id="tvm">0</span> Ft kintl.</div>
+      <button class="btn blo" onclick="doLogout()">&#8856; Kijelentkezes</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" onclick="sw('dashboard',this)">&#128202; Attekintes</button>
+      <button class="tab" onclick="sw('jobs',this)">&#128295; Munkak</button>
+      <button class="tab" onclick="sw('new',this)">&#10133; Uj munka</button>
+      <button class="tab" onclick="sw('people',this)">&#128101; Dolgozok</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="tc active" id="td">
+      <div class="sg" id="sg"></div>
+      <div class="st">Fizetetlen / reszben fizetett munkak</div>
+      <div class="tw"><table>
+        <thead><tr><th>Ugyfel</th><th>Helyszin</th><th>Datum</th><th>Dolgozo</th><th>Osszeg</th><th>Maradek</th><th>Statusz</th></tr></thead>
+        <tbody id="utb"></tbody>
+      </table>
+      <div id="uem" class="emp" style="display:none"><div class="ei">&#9989;</div>Minden ki van fizetve!</div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div class="tc" id="tj">
+      <div class="fr">
+        <div class="sw"><span class="si">&#128269;</span><input type="text" id="fls" placeholder="Kereses ugyfel, helyszin..." oninput="rJ()"></div>
+        <select class="fs" id="flw" onchange="rJ()"><option value="">Minden dolgozo</option></select>
+        <select class="fs" id="flt" onchange="rJ()"><option value="">Minden statusz</option><option value="unpaid">Fizetetlen</option><option value="partial">Reszben</option><option value="paid">Fizetve</option></select>
+        <select class="fs" id="flm" onchange="rJ()"><option value="">Minden honap</option></select>
+        <button class="btn bn" onclick="openM()">&#10133; Uj munka</button>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Datum</th><th>Ugyfel</th><th>Helyszin</th><th>Dolgozo</th><th>Orak</th><th>Oradij</th><th>Munkadij</th><th>Anyag</th><th>Osszesen</th><th>Fizetve</th><th>Statusz</th><th>Muveletek</th></tr></thead>
+        <tbody id="jtb"></tbody>
+      </table>
+      <div id="jem" class="emp" style="display:none"><div class="ei">&#128295;</div>Meg nincs rogzitett munka.</div>
+      </div>
+      <div class="tc2" id="jcnt"></div>
+    </div>
+
+    <!-- NEW JOB -->
+    <div class="tc" id="tn">
+      <div class="st">Uj munka rogzitese</div>
+      <div class="card">
+        <div class="fg">
+          <div class="g"><label>Datum *</label><input type="date" id="nd"></div>
+          <div class="g"><label>Ugyfel neve *</label><input type="text" id="nc" placeholder="pl. Kovacs Janos"></div>
+          <div class="g"><label>Helyszin / Cim *</label><input type="text" id="nl" placeholder="pl. Budapest, Fo u. 12."></div>
+          <div class="g"><label>Dolgozo valasztasa</label><select id="nw" onchange="wSel('n')"><option value="">-- Valassz dolgozot --</option></select></div>
+          <div class="g"><label>Ledolgozott orak *</label><input type="number" id="nh" placeholder="0" min="0" step="0.5" oninput="calc('n')"></div>
+          <div class="g"><label>Oradij (Ft) <span id="nrn" style="color:var(--ac);font-size:0.7rem;"></span></label><input type="number" id="nr" placeholder="5000" min="0" oninput="calc('n')"></div>
+          <div class="g"><label>Anyagkoltseg (Ft)</label><input type="number" id="nm" placeholder="0" min="0" oninput="calc('n')"></div>
+          <div class="g"><label>Fizetve osszeg (Ft)</label><input type="number" id="np" placeholder="0" min="0" oninput="calc('n')"></div>
+          <div class="g"><label>Fizetes modja</label><select id="npt"><option value="">--</option><option>Keszpenz</option><option>Atutalas</option><option>Kartya</option></select></div>
+          <div class="g full"><label>Megjegyzes / Elvegzett munkak</label><textarea id="nn" placeholder="pl. Villasregnevalo csere, 3 aljzat felszerelese..."></textarea></div>
+        </div>
+        <div class="cb">
+          <div class="ci"><div class="cl">Orak x Oradij</div><div class="cv" id="npl">0 Ft</div></div>
+          <div class="ci"><div class="cl">+ Anyag</div><div class="cv" id="npm">0 Ft</div></div>
+          <div class="ci"><div class="cl">- Fizetve</div><div class="cv" id="npp">0 Ft</div></div>
+          <div class="ci"><div class="cl">= Maradek</div><div class="cv hi" id="npt2">0 Ft</div></div>
+        </div>
+        <div class="fa"><button class="btn bsv" onclick="saveJob()">&#128190; Rogzites</button></div>
+        <div id="nm2" style="font-size:0.82rem;margin-top:10px;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- PEOPLE -->
+    <div class="tc" id="tp">
+      <div class="st">Dolgozok &amp; Oradijak</div>
+      <div class="card">
+        <div class="apr">
+          <div class="g"><label class="fl">Dolgozo neve *</label><input type="text" id="pn" placeholder="pl. Kis Istvan"></div>
+          <div class="g"><label class="fl">Oradij (Ft) *</label><input type="number" id="pr" placeholder="5000" min="0"></div>
+          <button class="btn bad" onclick="addP()">&#10133; Hozzaad</button>
+        </div>
+        <div id="pm" style="font-size:0.82rem;margin-top:10px;display:none;"></div>
+      </div>
+      <div class="pg" id="pg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mo" id="mo" onclick="closeMBg(event)">
+  <div class="md">
+    <div class="mt2" id="mt">Munka szerkesztese</div>
+    <input type="hidden" id="mid">
+    <div class="fg">
+      <div class="g"><label>Datum *</label><input type="date" id="md2"></div>
+      <div class="g"><label>Ugyfel neve *</label><input type="text" id="mc"></div>
+      <div class="g"><label>Helyszin *</label><input type="text" id="ml"></div>
+      <div class="g"><label>Dolgozo</label><select id="mw" onchange="wSel('m')"><option value="">--</option></select></div>
+      <div class="g"><label>Orak *</label><input type="number" id="mh" min="0" step="0.5" oninput="calc('m')"></div>
+      <div class="g"><label>Oradij (Ft)</label><input type="number" id="mr" min="0" oninput="calc('m')"></div>
+      <div class="g"><label>Anyag (Ft)</label><input type="number" id="mm" min="0" oninput="calc('m')"></div>
+      <div class="g"><label>Fizetve (Ft)</label><input type="number" id="mp" min="0" oninput="calc('m')"></div>
+      <div class="g"><label>Fizetes modja</label><select id="mpt"><option value="">--</option><option>Keszpenz</option><option>Atutalas</option><option>Kartya</option></select></div>
+      <div class="g full"><label>Megjegyzes</label><textarea id="mn"></textarea></div>
+    </div>
+    <div class="cb" style="margin-top:16px;">
+      <div class="ci"><div class="cl">Orak x Oradij</div><div class="cv" id="mpl">0 Ft</div></div>
+      <div class="ci"><div class="cl">+ Anyag</div><div class="cv" id="mpm">0 Ft</div></div>
+      <div class="ci"><div class="cl">- Fizetve</div><div class="cv" id="mpp">0 Ft</div></div>
+      <div class="ci"><div class="cl">= Maradek</div><div class="cv hi" id="mpt2">0 Ft</div></div>
+    </div>
+    <div class="fa" style="margin-top:16px;">
+      <button class="btn bcn" onclick="closeM()">Megse</button>
+      <button class="btn bsv" onclick="updJ()">Mentes</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const PASS='villa2024', SK='villa_s', DK='villa_j', PK='villa_p', GHK='villa_gh';
+
+// ===== UTILS =====
+function g(id){return document.getElementById(id);}
+function fmt(n){return Math.round(n||0).toLocaleString('hu-HU')+' Ft';}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(msg,col){
+  const el=g('toast');el.textContent=msg;el.style.color=col||'var(--tx)';
+  el.classList.add('show');clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ===== AUTH =====
+function doLogin(){
+  if(g('pw').value===PASS){localStorage.setItem(SK,'1');showApp();}
+  else{g('lerr').style.display='block';g('pw').value='';g('pw').focus();}
+}
+function doLogout(){localStorage.removeItem(SK);g('app').style.display='none';g('ls').style.display='flex';g('pw').value='';g('lerr').style.display='none';}
+function showApp(){g('ls').style.display='none';g('app').style.display='block';setToday();loadGHS();rAll();}
+g('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+if(localStorage.getItem(SK))showApp();
+
+// ===== DATA =====
+function getJ(){try{return JSON.parse(localStorage.getItem(DK))||[];}catch{return[];}}
+function getP(){try{return JSON.parse(localStorage.getItem(PK))||[];}catch{return[];}}
+function svJ(d){localStorage.setItem(DK,JSON.stringify(d));}
+function svP(d){localStorage.setItem(PK,JSON.stringify(d));}
+function tot(j){return((parseFloat(j.hours)||0)*(parseFloat(j.rate)||0))+(parseFloat(j.material)||0);}
+function st(j){const t=tot(j),p=parseFloat(j.paid)||0;if(p<=0)return'unpaid';if(p>=t)return'paid';return'partial';}
+
+// ===== GITHUB =====
+function saveGHS(){
+  const s={u:g('ghu').value.trim(),r:g('ghr').value.trim(),f:g('ghf').value.trim()||'villa_adatok.json',t:g('ght').value.trim()};
+  localStorage.setItem(GHK,JSON.stringify(s));
+  toast('Beallitas elmentve!','#a78bfa');
+}
+function loadGHS(){
+  try{
+    const s=JSON.parse(localStorage.getItem(GHK)||'{}');
+    if(s.u)g('ghu').value=s.u;
+    if(s.r)g('ghr').value=s.r;
+    if(s.f)g('ghf').value=s.f;
+    if(s.t)g('ght').value=s.t;
+  }catch(e){}
+}
+function ghs(){return{u:g('ghu').value.trim(),r:g('ghr').value.trim(),f:g('ghf').value.trim()||'villa_adatok.json',t:g('ght').value.trim()};}
+function ghSt(msg,cls){
+  const el=g('ghst');el.textContent=msg;el.className='ghst '+cls;
+  if(cls==='ok'||cls==='err')setTimeout(()=>el.className='ghst',5000);
+}
+function ghUrl(u,r,f){return 'https://api.github.com/repos/'+u+'/'+r+'/contents/'+f;}
+
+async function ghLoad(){
+  const {u,r,f,t}=ghs();
+  if(!u||!r||!t){toast('Toltsd ki a GitHub mezokat!','var(--rd)');return;}
+  ghSt('Betoltes...','ld');
+  try{
+    const res=await fetch(ghUrl(u,r,f),{headers:{Authorization:'token '+t,Accept:'application/vnd.github.v3+json'}});
+    if(res.status===404){ghSt('Fajl nem letezik - ments el eloszor','ok');return;}
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    const raw=atob(json.content.replace(/\n/g,''));
+    const data=JSON.parse(decodeURIComponent(escape(raw)));
+    if(data.jobs)svJ(data.jobs);
+    if(data.people)svP(data.people);
+    rAll();
+    ghSt(data.jobs.length+' munka, '+data.people.length+' dolgozo betoltve','ok');
+    toast('GitHub adatok betoltve!','var(--gr)');
+  }catch(e){ghSt('Hiba: '+e.message,'err');toast('GitHub hiba: '+e.message,'var(--rd)');}
+}
+
+async function ghSave(){
+  const {u,r,f,t}=ghs();
+  if(!u||!r||!t){toast('Toltsd ki a GitHub mezokat!','var(--rd)');return;}
+  ghSt('Mentes...','ld');
+  try{
+    const data={jobs:getJ(),people:getP(),savedAt:new Date().toISOString()};
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    let sha=undefined;
+    const chk=await fetch(ghUrl(u,r,f),{headers:{Authorization:'token '+t,Accept:'application/vnd.github.v3+json'}});
+    if(chk.ok){const cj=await chk.json();sha=cj.sha;}
+    const body={message:'Villa naplo frissites - '+new Date().toLocaleString('hu-HU'),content};
+    if(sha)body.sha=sha;
+    const res=await fetch(ghUrl(u,r,f),{method:'PUT',headers:{Authorization:'token '+t,'Content-Type':'application/json',Accept:'application/vnd.github.v3+json'},body:JSON.stringify(body)});
+    if(!res.ok){const ej=await res.json();throw new Error(ej.message||'HTTP '+res.status);}
+    ghSt('Elmentve GitHub-ra! ('+data.jobs.length+' munka)','ok');
+    toast('Adatok elmentve a GitHub repoba!','var(--gr)');
+  }catch(e){ghSt('Hiba: '+e.message,'err');toast('Mentesi hiba: '+e.message,'var(--rd)');}
+}
+
+// ===== TABS =====
+function sw(n,btn){
+  document.querySelectorAll('.tc').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  g('t'+n[0]).classList.add('active');btn.classList.add('active');rAll();
+}
+
+// ===== AUTO-CALC =====
+function calc(p){
+  const h=parseFloat(g(p+'h').value)||0,r=parseFloat(g(p+'r').value)||0,m=parseFloat(g(p+'m').value)||0,pd=parseFloat(g(p+'p').value)||0;
+  const lab=h*r,total=lab+m,rem=Math.max(0,total-pd);
+  g(p+'pl').textContent=fmt(lab);
+  g(p+'pm').textContent=fmt(m);
+  g(p+'pp').textContent=fmt(pd);
+  g(p+'pt2').textContent=fmt(rem);
+}
+
+function wSel(p){
+  const name=g(p+'w').value;if(!name)return;
+  const pr=getP().find(x=>x.name===name);
+  if(pr){
+    const el=g(p+'r');el.value=pr.rate;
+    el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');
+    const n=g(p+'rn');if(n)n.textContent='<- auto';
+    calc(p);
+  }
+}
+
+// ===== WORKER SELECTS =====
+function popW(p,cur){
+  const ppl=getP();
+  ['nw','mw','flw'].forEach(id=>{
+    const sel=g(id);if(!sel)return;
+    const cv=id==='flw'?sel.value:(id===p+'w'?cur:sel.value);
+    const prefix=id==='flw'?'<option value="">Minden dolgozo</option>':'<option value="">-- Valassz --</option>';
+    sel.innerHTML=prefix+ppl.map(x=>'<option value="'+esc(x.name)+'"'+(cv===x.name?' selected':'')+'>'+esc(x.name)+' ('+fmt(x.rate)+'/ora)</option>').join('');
+  });
+}
+
+function setToday(){const t=new Date().toISOString().split('T')[0];if(g('nd'))g('nd').value=t;}
+
+// ===== PEOPLE =====
+function addP(){
+  const name=g('pn').value.trim(),rate=parseFloat(g('pr').value);
+  if(!name){showPM('error','Add meg a nevet!');return;}
+  if(!rate||rate<=0){showPM('error','Add meg az oradijat!');return;}
+  const ppl=getP();
+  if(ppl.find(x=>x.name.toLowerCase()===name.toLowerCase())){showPM('error','Mar letezik ilyen nevu dolgozo!');return;}
+  ppl.push({id:Date.now(),name,rate});
+  svP(ppl);g('pn').value='';g('pr').value='';
+  showPM('ok','Dolgozo hozzaadva!');
+  rAll();
+}
+function editP(id){
+  const ppl=getP(),p=ppl.find(x=>x.id===id);if(!p)return;
+  const nn=prompt('Dolgozo neve:',p.name);if(!nn)return;
+  const nr=prompt('Oradij (Ft):',p.rate);if(!nr)return;
+  p.name=nn.trim();p.rate=parseFloat(nr)||p.rate;
+  svP(ppl);rAll();
+}
+function delP(id){
+  if(!confirm('Biztosan torlod ezt a dolgozot?'))return;
+  svP(getP().filter(x=>x.id!==id));rAll();
+}
+function showPM(type,text){
+  const el=g('pm');el.textContent=text;el.style.color=type==='error'?'var(--rd)':'var(--gr)';el.style.display='block';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2800);
+}
+
+// ===== SAVE JOB =====
+function saveJob(){
+  const date=g('nd').value,client=g('nc').value.trim(),loc=g('nl').value.trim(),hours=g('nh').value;
+  if(!date||!client||!loc||!hours){showNM('error','Toltsd ki a kotelezO mezOket (*)!');return;}
+  const job={id:Date.now(),date,client,location:loc,worker:g('nw').value,hours:parseFloat(hours),rate:parseFloat(g('nr').value)||0,material:parseFloat(g('nm').value)||0,paid:parseFloat(g('np').value)||0,paytype:g('npt').value,note:g('nn').value.trim(),createdAt:new Date().toISOString()};
+  const jobs=getJ();jobs.push(job);svJ(jobs);
+  ['nc','nl','nh','nr','nm','np','nn'].forEach(id=>g(id).value='');
+  g('nw').value='';g('npt').value='';const nrn=g('nrn');if(nrn)nrn.textContent='';
+  calc('n');setToday();
+  showNM('ok','Munka sikeresen rogzitve!');
+  rAll();
+}
+function showNM(type,text){
+  const el=g('nm2');el.textContent=text;el.style.color=type==='error'?'var(--rd)':'var(--gr)';el.style.display='block';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3000);
+}
+
+// ===== MODAL =====
+function openM(id){
+  popW('m','');
+  if(id){
+    const j=getJ().find(x=>x.id===id);if(!j)return;
+    g('mid').value=j.id;g('md2').value=j.date;g('mc').value=j.client;g('ml').value=j.location;
+    popW('m',j.worker||'');
+    g('mh').value=j.hours;g('mr').value=j.rate;g('mm').value=j.material;g('mp').value=j.paid;
+    g('mpt').value=j.paytype||'';g('mn').value=j.note||'';
+    g('mt').textContent='Munka szerkesztese';calc('m');
+  } else {
+    ['md2','mc','ml','mh','mr','mm','mp','mn'].forEach(id=>g(id).value='');
+    g('mid').value='';g('mw').value='';g('mpt').value='';
+    g('mt').textContent='Uj munka felvetele';calc('m');
+  }
+  g('mo').classList.add('open');
+}
+function closeM(){g('mo').classList.remove('open');}
+function closeMBg(e){if(e.target===g('mo'))closeM();}
+function updJ(){
+  const mid=g('mid').value,date=g('md2').value,client=g('mc').value.trim(),loc=g('ml').value.trim(),hours=g('mh').value;
+  if(!date||!client||!loc||!hours){alert('Toltsd ki a kotelezO mezOket!');return;}
+  const jobs=getJ();
+  const upd={id:mid?parseInt(mid):Date.now(),date,client,location:loc,worker:g('mw').value,hours:parseFloat(hours),rate:parseFloat(g('mr').value)||0,material:parseFloat(g('mm').value)||0,paid:parseFloat(g('mp').value)||0,paytype:g('mpt').value,note:g('mn').value.trim(),createdAt:new Date().toISOString()};
+  if(mid){const i=jobs.findIndex(x=>x.id===parseInt(mid));if(i>=0)jobs[i]={...jobs[i],...upd};}else{jobs.push(upd);}
+  svJ(jobs);closeM();rAll();
+}
+
+function markPaid(id){
+  const jobs=getJ(),j=jobs.find(x=>x.id===id);if(!j)return;
+  j.paid=tot(j);if(!j.paytype)j.paytype='Keszpenz';
+  svJ(jobs);rAll();
+}
+function delJ(id){
+  if(!confirm('Biztosan torlod?'))return;
+  svJ(getJ().filter(x=>x.id!==id));rAll();
+}
+
+// ===== RENDER ALL =====
+function rAll(){popW('n','');popMF();rDash();rJ();rP();}
+
+// RENDER DASHBOARD
+function rDash(){
+  const jobs=getJ();
+  const th=jobs.reduce((s,j)=>s+(j.hours||0),0);
+  const tr=jobs.reduce((s,j)=>s+tot(j),0);
+  const tp=jobs.reduce((s,j)=>s+(parseFloat(j.paid)||0),0);
+  const tu=tr-tp;
+  g('tvh').textContent=th.toLocaleString('hu-HU');
+  g('tvm').textContent=Math.round(tu).toLocaleString('hu-HU');
+  g('sg').innerHTML=[
+    ['&#128203; Osszes munka','bl',jobs.length,'rogzitett tetel'],
+    ['&#128336; Ledolgozott orak','ye',th.toLocaleString('hu-HU'),'osszesen'],
+    ['&#128176; Kiszamlazott','gn',fmt(tr),'munkadij + anyag'],
+    ['&#9989; Befizetve','gn',fmt(tp),''],
+    ['&#10060; Kintlevo','re',fmt(tu),'fizetetlen']
+  ].map(([l,c,v,s])=>'<div class="sc"><div class="scl">'+l+'</div><div class="scv '+c+'">'+v+'</div>'+(s?'<div class="scs">'+s+'</div>':'')+'</div>').join('');
+  const unp=jobs.filter(j=>st(j)!=='paid').sort((a,b)=>b.date.localeCompare(a.date));
+  const utb=g('utb'),uem=g('uem');
+  if(!unp.length){utb.innerHTML='';uem.style.display='block';return;}
+  uem.style.display='none';
+  utb.innerHTML=unp.map(j=>{
+    const t=tot(j),p=parseFloat(j.paid)||0,rem=t-p;
+    const badge=st(j)==='partial'?'<span class="badge bpa">&#9889; Reszben</span>':'<span class="badge bu">&#10060; Fizetetlen</span>';
+    return '<tr><td>'+esc(j.client)+'</td><td>'+esc(j.location)+'</td><td>'+esc(j.date)+'</td><td>'+(j.worker?esc(j.worker):'-')+'</td><td>'+fmt(t)+'</td><td style="color:var(--rd);font-weight:700">'+fmt(rem)+'</td><td>'+badge+'</td></tr>';
+  }).join('');
+}
+
+// MONTH FILTER
+function popMF(){
+  const jobs=getJ(),months=[...new Set(jobs.map(j=>j.date.slice(0,7)))].sort().reverse();
+  const sel=g('flm');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Minden honap</option>'+months.map(m=>'<option value="'+m+'"'+(cur===m?' selected':'')+'>'+m+'</option>').join('');
+}
+
+// RENDER JOBS
+function rJ(){
+  const jobs=getJ();
+  const s=(g('fls')?.value||'').toLowerCase(),st2=g('flt')?.value||'',mo=g('flm')?.value||'',wk=g('flw')?.value||'';
+  const f=jobs.filter(j=>{
+    if(st2&&st(j)!==st2)return false;
+    if(mo&&!j.date.startsWith(mo))return false;
+    if(wk&&(j.worker||'')!==wk)return false;
+    if(s&&!j.client.toLowerCase().includes(s)&&!j.location.toLowerCase().includes(s)&&!(j.worker||'').toLowerCase().includes(s))return false;
+    return true;
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+  const tbody=g('jtb'),em=g('jem'),cnt=g('jcnt');
+  if(!f.length){tbody.innerHTML='';em.style.display='block';cnt.textContent='';return;}
+  em.style.display='none';cnt.textContent=f.length+' munka megjelenitve';
+  tbody.innerHTML=f.map(j=>{
+    const t=tot(j),lab=(j.hours||0)*(j.rate||0),pd=parseFloat(j.paid)||0,s2=st(j);
+    const badge=s2==='paid'?'<span class="badge bp2">&#9989; Fizetve</span>':s2==='partial'?'<span class="badge bpa">&#9889; Reszben</span>':'<span class="badge bu">&#10060; Fizetetlen</span>';
+    const note=j.note?'<br><span style="color:var(--tx2);font-size:0.75rem">'+esc(j.note.slice(0,55))+(j.note.length>55?'...':'')+'</span>':'';
+    return '<tr><td>'+esc(j.date)+'</td><td>'+esc(j.client)+note+'</td><td>'+esc(j.location)+'</td><td>'+(j.worker?'<span style="color:var(--ac);font-weight:600">'+esc(j.worker)+'</span>':'-')+'</td><td><strong>'+j.hours+'o</strong></td><td>'+(j.rate?fmt(j.rate):'-')+'</td><td>'+fmt(lab)+'</td><td>'+(j.material?fmt(j.material):'-')+'</td><td><strong>'+fmt(t)+'</strong></td><td>'+(pd>0?fmt(pd):'-')+(j.paytype?'<br><span style="font-size:0.73rem;color:var(--tx2)">'+esc(j.paytype)+'</span>':'')+'</td><td>'+badge+'</td><td><div class="ac2"><button class="bsm" onclick="openM('+j.id+')">&#9998;</button>'+(s2!=='paid'?'<button class="bsm sc2" onclick="markPaid('+j.id+')">&#128176; Fizetve</button>':'')+'<button class="bsm dg" onclick="delJ('+j.id+')">&#128465;</button></div></td></tr>';
+  }).join('');
+}
+
+// RENDER PEOPLE
+function rP(){
+  const ppl=getP(),grid=g('pg');
+  if(!ppl.length){grid.innerHTML='<div class="emp"><div class="ei">&#128101;</div>Meg nincs dolgozo felvive.</div>';return;}
+  grid.innerHTML=ppl.map(p=>'<div class="pc"><div><div class="pn">&#128119; '+esc(p.name)+'</div><div class="pr">&#9889; '+fmt(p.rate)+' / ora</div></div><div class="pa"><button class="bis" onclick="editP('+p.id+')">&#9998;</button><button class="bis dl" onclick="delP('+p.id+')">&#128465;</button></div></div>').join('');
+}
+</script>
+</body>
+</html>
